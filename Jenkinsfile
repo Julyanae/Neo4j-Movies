@@ -16,7 +16,7 @@ pipeline {
         stage('Analyse SonarQube') {
             steps {
                 withSonarQubeEnv('SonarQube-Server') {
-                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=neo4j-movies -Dsonar.login=${SONAR_TOKEN}'
+                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=Neo4j-Movies -Dsonar.login=${SONAR_TOKEN}'
                 }
             }
         }
