@@ -3,6 +3,9 @@ pipeline {
     tools {
         maven 'Maven' // Nom configuré dans Global Tool Configuration
     }
+    environment {
+        SONAR_TOKEN = credentials('sonar-token') // Remplacez 'sonar-token' par l'ID de vos credentials dans Jenkins
+    }
     stages {
         stage('Cloner le projet') {
             steps {
@@ -14,8 +17,8 @@ pipeline {
         stage('Analyse SonarQube') {
             steps {
                 // Analyse avec SonarQube
-                withSonarQubeEnv('SonarQube-Server') { // Nom exact du serveur configuré
-                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=neo4j-movies'
+                withSonarQubeEnv('SonarQube-Server') {
+                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=neo4j-movies -Dsonar.login=${SONAR_TOKEN}'
                 }
             }
         }
