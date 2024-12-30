@@ -6,13 +6,15 @@ pipeline {
     stages {
         stage('Cloner le projet') {
             steps {
+                // Cloner le dépôt Git spécifié
                 git branch: 'main', url: 'https://github.com/Julyanae/Neo4j-Movies.git'
             }
         }
 
         stage('Analyse SonarQube') {
             steps {
-                withSonarQubeEnv('SonarQube Server') {
+                // Analyse avec SonarQube
+                withSonarQubeEnv('SonarQube Server') { // Nom exact du serveur configuré
                     sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=neo4j-movies'
                 }
             }
