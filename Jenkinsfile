@@ -10,9 +10,9 @@ pipeline {
             }
         }
         stage('Analyse SonarQube') {
-              tools {
-                    maven 'Maven'
-                }
+            tools {
+                maven 'Maven'
+            }
             steps {
                 withSonarQubeEnv('SonarQube-Server') {
                     sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=Neo4j-Movies -Dsonar.login=${SONAR_TOKEN}'
@@ -36,6 +36,24 @@ pipeline {
                         sh "docker tag ${DOCKER_IMAGE} ${DOCKER_USER}/${DOCKER_IMAGE}"
                         sh "docker push ${DOCKER_USER}/${DOCKER_IMAGE}"
                     }
+                }
+            }
+        }
+        stage('Deploy and Start the Dockerized Project') {
+            steps {
+                script {
+                    // Tirer l'image Docker depuis DockerHub
+                    sh "docker pull ${DOCKER_USER}/${DOCKER_IMAGE}"
+
+                    // Vérifier si un conteneur existe déjà, le supprimer s'il existe
+                    sh """
+                    if [ \$(docker ps -aq -f name=neo4j-movies-app) ]; then
+                        docker rm -f neo4j-movies-app
+                    fi
+                    """
+
+                    // Démarrer le conteneur en mappant sur le port 8082
+                    sh "docker run -d --name neo4j-movies-app -p 8082:8080 ${DOCKER_USER}/${DOCKER_IMAGE}"
                 }
             }
         }
