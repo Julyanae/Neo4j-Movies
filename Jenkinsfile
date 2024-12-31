@@ -39,23 +39,27 @@ pipeline {
                 }
             }
         }
-        stage('Deploy and Start the Dockerized Project') {
-            steps {
-                script {
-                    // Tirer l'image Docker depuis DockerHub
-                    sh "docker pull ${DOCKER_USER}/${DOCKER_IMAGE}"
+       stage('Deploy and Start the Dockerized Project') {
+           steps {
+               script {
+                   // Inject credentials
+                   withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                       // Tirer l'image Docker depuis DockerHub
+                       sh "docker pull ${DOCKER_USER}/${DOCKER_IMAGE}"
 
-                    // Vérifier si un conteneur existe déjà, le supprimer s'il existe
-                    sh """
-                    if [ \$(docker ps -aq -f name=neo4j-movies-app) ]; then
-                        docker rm -f neo4j-movies-app
-                    fi
-                    """
+                       // Vérifier si un conteneur existe déjà, le supprimer s'il existe
+                       sh """
+                       if [ \$(docker ps -aq -f name=neo4j-movies-app) ]; then
+                           docker rm -f neo4j-movies-app
+                       fi
+                       """
 
-                    // Démarrer le conteneur en mappant sur le port 8082
-                    sh "docker run -d --name neo4j-movies-app -p 8082:8080 ${DOCKER_USER}/${DOCKER_IMAGE}"
-                }
-            }
-        }
+                       // Démarrer le conteneur en mappant sur le port 8082
+                       sh "docker run -d --name neo4j-movies-app -p 8082:8080 ${DOCKER_USER}/${DOCKER_IMAGE}"
+                   }
+               }
+           }
+       }
+
     }
 }
