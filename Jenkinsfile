@@ -55,10 +55,12 @@ pipeline {
                        """
 
                        // Démarrer le conteneur en mappant sur le port 8082
-                       sh "docker run -d --name neo4j-movies-app -p 8082:8080 ${DOCKER_USER}/${DOCKER_IMAGE}"
+                       sh "docker run -d --name neo4j-movies-app -p 8082:8081 ${DOCKER_USER}/${DOCKER_IMAGE}"
                    }
                }
            }
+       }
+
        }
 
     }
