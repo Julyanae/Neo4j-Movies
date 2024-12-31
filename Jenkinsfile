@@ -1,7 +1,7 @@
 pipeline {
     agent any
-    tools {
-        maven 'Maven' 
+    environment {
+        DOCKER_IMAGE = 'neo4j-movies-app:latest' // Nom de l'image Docker
     }
     stages {
         stage('Cloner le projet') {
@@ -12,13 +12,28 @@ pipeline {
         stage('Analyse SonarQube') {
             steps {
                 withSonarQubeEnv('SonarQube-Server') {
-                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=Neo4j-Movies'
+                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=Neo4j-Movies -Dsonar.login=${SONAR_TOKEN}'
                 }
             }
         }
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh 'mvn clean package'
+                script {
+                    // Construire l'image Docker
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+        stage('Push Docker Image to DockerHub') {
+            steps {
+                script {
+                    // Connecter à DockerHub et pousser l'image
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker tag ${DOCKER_IMAGE} ${DOCKER_USER}/${DOCKER_IMAGE}"
+                        sh "docker push ${DOCKER_USER}/${DOCKER_IMAGE}"
+                    }
+                }
             }
         }
     }
