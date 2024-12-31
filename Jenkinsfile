@@ -22,7 +22,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Construire l'image Docker
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
@@ -30,7 +29,6 @@ pipeline {
         stage('Push Docker Image to DockerHub') {
             steps {
                 script {
-                    // Connecter à DockerHub (assurez-vous d'avoir ajouté vos credentials dans Jenkins)
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                         sh "docker tag ${DOCKER_IMAGE} ${DOCKER_USER}/${DOCKER_IMAGE}"
@@ -39,29 +37,20 @@ pipeline {
                 }
             }
         }
-       stage('Deploy and Start the Dockerized Project') {
-           steps {
-               script {
-                   // Inject credentials
-                   withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                       // Tirer l'image Docker depuis DockerHub
-                       sh "docker pull ${DOCKER_USER}/${DOCKER_IMAGE}"
-
-                       // Vérifier si un conteneur existe déjà, le supprimer s'il existe
-                       sh """
-                       if [ \$(docker ps -aq -f name=neo4j-movies-app) ]; then
-                           docker rm -f neo4j-movies-app
-                       fi
-                       """
-
-                       // Démarrer le conteneur en mappant sur le port 8082
-                       sh "docker run -d --name neo4j-movies-app -p 8082:8081 ${DOCKER_USER}/${DOCKER_IMAGE}"
-                   }
-               }
-           }
-       }
-
-       }
-
+        stage('Deploy and Start the Dockerized Project') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "docker pull ${DOCKER_USER}/${DOCKER_IMAGE}"
+                        sh """
+                        if [ \$(docker ps -aq -f name=neo4j-movies-app) ]; then
+                            docker rm -f neo4j-movies-app
+                        fi
+                        """
+                        sh "docker run -d --name neo4j-movies-app -p 8082:8081 ${DOCKER_USER}/${DOCKER_IMAGE}"
+                    }
+                }
+            }
+        }
     }
 }
